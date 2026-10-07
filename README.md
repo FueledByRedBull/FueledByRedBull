@@ -75,5 +75,3 @@ Also on here:
 - [rust-spreadsheet](https://github.com/FueledByRedBull/rust-spreadsheet): spreadsheet with a Rust computation engine behind a PyQt6 UI.
 - [crossword](https://github.com/FueledByRedBull/crossword): themed crosswords generated from a Wikipedia article.
 - [CompVis](https://github.com/FueledByRedBull/CompVis): real-time facial expression analyzer.
-
-<sub>The header and tiles are SVG animated with CSS keyframes. No JavaScript, no third-party widgets. <code>python build.py</code> regenerates them.</sub>
