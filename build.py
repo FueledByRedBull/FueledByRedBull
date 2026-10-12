@@ -32,6 +32,7 @@ THEMES = {
         "teal": "#2dd4bf", "violet": "#a78bfa", "gold": "#e3b341",
         "sand": ["#e9c46a", "#dcb35c", "#f1d38a"],
         "water": ["#58a6ff", "#4493f8", "#79c0ff"],
+        "langs": ["#ff8736", "#4b66e2", "#8afde7", "#cb304f", "#7aaeef"],
     },
     "light": {
         "panel": "#f6f8fa", "line": "#d0d7de", "mute": "#d0d7de", "rule": "#8c959f",
@@ -40,6 +41,7 @@ THEMES = {
         "teal": "#0f9d8c", "violet": "#8250df", "gold": "#bf8700",
         "sand": ["#c69026", "#b5811c", "#d4a23a"],
         "water": ["#0969da", "#218bff", "#54aeff"],
+        "langs": ["#df5a10", "#15068a", "#29a895", "#681d3b", "#006495"],
     },
 }
 
@@ -264,7 +266,9 @@ def arsenal(t):
 
 def languages(t):
     rnd = random.Random(5)
-    colors = [t["ember"][3], t["water"][0], t["violet"], t["teal"], t["gold"]]
+    # "langs" is assigned by rank. The five were searched so that every pair, not only neighbours, stays apart
+    # under red-green colour blindness: they differ in lightness as well as hue (blue/violet and orange/gold did not).
+    colors = t["langs"]
     x0, y0, cells = 60, 70, 116
     bar = rect(x0, y0, cells * 10, 40, t["mute"])  # whatever the listed languages leave uncovered stays muted
     legend, x, widths = "", x0, []
