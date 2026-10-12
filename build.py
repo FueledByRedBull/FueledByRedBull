@@ -34,6 +34,18 @@ THEMES = {
 # Loops are decoration, so reduced motion gets the static frame.
 STILL = "@media (prefers-reduced-motion:reduce){*{animation:none!important}}"
 
+# Embers drifting up and fading; each spark sets its own duration and delay inline.
+SPARKS = (
+    f".s{{opacity:0;animation:rise0 6s {EASE_OUT} infinite}}.s1{{animation-name:rise1}}"
+    "@keyframes rise0{0%{transform:translate(0,0);opacity:0}5%{opacity:.9}30%,100%{transform:translate(7px,-58px);opacity:0}}"
+    "@keyframes rise1{0%{transform:translate(0,0);opacity:0}5%{opacity:.9}30%,100%{transform:translate(-6px,-70px);opacity:0}}"
+)
+
+# Share of bytes per language across the public, non-fork repos (2026-10-12), top five without PowerShell, from:
+#   gh repo list FueledByRedBull --visibility public --source --no-archived --json languages
+# ponytail: hand-refreshed snapshot; move to a scheduled workflow if it drifts often
+LANGS = [("Rust", 46.5), ("Python", 34.3), ("C++", 9.0), ("TypeScript", 5.6), ("JavaScript", 1.2)]
+
 FONT = {
     "F": ["#####", "#....", "#....", "####.", "#....", "#....", "#...."],
     "u": [".....", ".....", "#...#", "#...#", "#...#", "#..##", ".##.#"],
@@ -87,29 +99,26 @@ def hero(t):
         style = f"animation-duration:{5.3 + n * 0.9:.1f}s;animation-delay:{2.2 + rnd.random() * 4:.1f}s"
         sparks.append(rect(x0 + col * cell + 3, y0 + tops[col] * cell - 8, 6, 6, t["ember"][n % 3], f"s s{n % 2}", style, 1))
     css = (
-        ".g{animation:fall .46s linear backwards}"
-        f".s{{opacity:0;animation:rise0 6s {EASE_OUT} infinite}}.s1{{animation-name:rise1}}"
-        "@keyframes fall{from{transform:translateY(-240px)}}"
-        "@keyframes rise0{0%{transform:translate(0,0);opacity:0}5%{opacity:.9}30%,100%{transform:translate(7px,-58px);opacity:0}}"
-        "@keyframes rise1{0%{transform:translate(0,0);opacity:0}5%{opacity:.9}30%,100%{transform:translate(-6px,-70px);opacity:0}}"
+        ".g{animation:fall .46s linear backwards}" + SPARKS
+        + "@keyframes fall{from{transform:translateY(-240px)}}"
         "@keyframes fade{from{opacity:0}}"
         "@media (prefers-reduced-motion:reduce){.g{animation:fade .2s ease backwards;animation-delay:0s!important}.s{animation:none}}"
     )
     return svg(w, h, "FueledByRedBull", css, "".join(sparks + grains))
 
 
-def tile(t, label, css, body, over="", grid=True):
-    """640x240 panel. With grid=True a panel-coloured mesh sits on top, so solid
+def tile(t, label, css, body, over="", mesh=(40, 20, 560, 200), w=640):
+    """240px-tall panel. A panel-coloured mesh sits on top of the `mesh` box, so solid
     shapes snapped to the 10px grid read as rows of grains while they animate."""
-    mesh = ""
-    if grid:
+    if mesh:
+        x, y, mw, mh = mesh
         mesh = (
             f'<pattern id="m" width="10" height="10" patternUnits="userSpaceOnUse">'
             f'<path d="M0 9h10M9 0v10" stroke="{t["panel"]}" stroke-width="2"/></pattern>'
-            '<rect x="40" y="20" width="560" height="200" fill="url(#m)"/>'
+            + rect(x, y, mw, mh, "url(#m)")
         )
-    frame = rect(0.5, 0.5, 639, 239, t["panel"], rx=14, stroke=t["line"])
-    return svg(640, 240, label, css + STILL, frame + body + mesh + over)
+    frame = rect(0.5, 0.5, w - 1, 239, t["panel"], rx=14, stroke=t["line"])
+    return svg(w, 240, label, css + STILL, frame + body + (mesh or "") + over)
 
 
 def audio(t):
@@ -165,7 +174,7 @@ def powder(t):
         f"@keyframes w{{to{{transform:translateY({water_drop}px)}}}}"
         "@keyframes f{to{opacity:.5}}"
     )
-    return tile(t, "Powder-Game: sand and water falling into a heap", css, "".join(falling + still + surface) + spouts, grid=False)
+    return tile(t, "Powder-Game: sand and water falling into a heap", css, "".join(falling + still + surface) + spouts, mesh=None)
 
 
 def twitch(t):
@@ -209,7 +218,34 @@ def arsenal(t):
     return tile(t, "tarnisheds-arsenal: stats rebalancing while the attack rating climbs", css, sword + bars)
 
 
-ASSETS = {"hero": hero, "audio-forge": audio, "powder-game": powder, "twitch-miner": twitch, "tarnisheds-arsenal": arsenal}
+def languages(t):
+    rnd = random.Random(5)
+    colors = [t["ember"][3], t["water"][0], t["violet"], t["teal"], t["gold"]]
+    x0, y0, cells = 60, 70, 116
+    bar = rect(x0, y0, cells * 10, 40, t["mute"])  # whatever the listed languages leave uncovered stays muted
+    legend, x, widths = "", x0, []
+    for i, ((name, share), color) in enumerate(zip(LANGS, colors)):
+        widths.append(10 * max(1, round(cells * share / 100)))
+        bar += rect(x, y0, widths[i], 40, color)
+        x += widths[i]
+        lx, ly = x0 + 390 * (i % 3), 148 + 40 * (i // 3)
+        legend += "".join(rect(lx + dx, ly + dy, 8, 8, color, rx=1.5) for dx in (0, 10) for dy in (0, 10))
+        legend += f'<text x="{lx + 36}" y="{ly + 17}">{name} <tspan fill="{t["rule"]}">{share}%</tspan></text>'
+    assert x <= x0 + cells * 10, "shares add up to more than the bar"
+    sparks = "".join(
+        rect(x0 + 10 * rnd.randrange(widths[0] // 10) + 1, y0 - 8, 6, 6, t["ember"][n % 3], f"s s{n % 2}",
+             f"animation-duration:{5.3 + n * 0.9:.1f}s;animation-delay:-{rnd.random() * 6:.1f}s", 1)
+        for n in range(5)
+    )
+    css = SPARKS + f'text{{font:24px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:{t["ink"][0]}}}'
+    label = "Most used languages: " + ", ".join(f"{name} {share}%" for name, share in LANGS)
+    return tile(t, label, css, sparks + bar, legend, mesh=(x0, y0, cells * 10, 40), w=1280)
+
+
+ASSETS = {
+    "hero": hero, "audio-forge": audio, "powder-game": powder, "twitch-miner": twitch,
+    "tarnisheds-arsenal": arsenal, "languages": languages,
+}
 
 if __name__ == "__main__":
     OUT.mkdir(exist_ok=True)

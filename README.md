@@ -75,3 +75,11 @@ Also on here:
 - [rust-spreadsheet](https://github.com/FueledByRedBull/rust-spreadsheet): spreadsheet with a Rust computation engine behind a PyQt6 UI.
 - [crossword](https://github.com/FueledByRedBull/crossword): themed crosswords generated from a Wikipedia article.
 - [CompVis](https://github.com/FueledByRedBull/CompVis): real-time facial expression analyzer.
+
+## Languages
+
+<a href="https://github.com/FueledByRedBull?tab=repositories"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/languages-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/languages-light.svg">
+  <img src="assets/languages-light.svg" alt="Most used languages across my public repos: Rust, Python, C++, TypeScript, JavaScript" width="100%">
+</picture></a>
