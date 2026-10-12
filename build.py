@@ -1,13 +1,25 @@
 """Regenerates assets/*.svg. Standard library only: python build.py
 
+`python build.py --refresh` first re-reads the language shares from GitHub
+(needs the gh CLI); the weekly workflow runs exactly that.
+
 Every SVG is self-contained (inline CSS keyframes, no scripts, no fonts, no
 external references) because GitHub serves README images as sandboxed <img>.
 """
+import html
+import json
 import math
 import random
+import re
+import subprocess
+import sys
+from collections import Counter
 from pathlib import Path
 
-OUT = Path(__file__).parent / "assets"
+ROOT = Path(__file__).parent
+OUT = ROOT / "assets"
+DATA = ROOT / "languages.json"  # {"language": percent of bytes}, rewritten by --refresh
+SKIP = {"PowerShell"}  # build and release glue, not what the repos are about
 
 EASE_OUT = "cubic-bezier(0.23,1,0.32,1)"
 EASE_IN_OUT = "cubic-bezier(0.77,0,0.175,1)"
@@ -41,10 +53,42 @@ SPARKS = (
     "@keyframes rise1{0%{transform:translate(0,0);opacity:0}5%{opacity:.9}30%,100%{transform:translate(-6px,-70px);opacity:0}}"
 )
 
-# Share of bytes per language across the public, non-fork repos (2026-10-12), top five without PowerShell, from:
-#   gh repo list FueledByRedBull --visibility public --source --no-archived --json languages
-# ponytail: hand-refreshed snapshot; move to a scheduled workflow if it drifts often
-LANGS = [("Rust", 46.5), ("Python", 34.3), ("C++", 9.0), ("TypeScript", 5.6), ("JavaScript", 1.2)]
+
+
+def top_languages(repos, top=5):
+    """Percent of bytes per language, largest first. SKIP is hidden but still counts towards the total.
+
+    >>> top_languages([{"languages": [{"size": 3, "node": {"name": "Rust"}}, {"size": 1, "node": {"name": "PowerShell"}}]}])
+    {'Rust': 75.0}
+    """
+    size = Counter()
+    for repo in repos:
+        for lang in repo["languages"]:
+            size[lang["node"]["name"]] += lang["size"]
+    total = sum(size.values())
+    shown = [(name, n) for name, n in size.most_common() if name not in SKIP][:top]
+    return {name: round(100 * n / total, 1) for name, n in shown}
+
+
+def refresh_languages(owner="FueledByRedBull"):
+    """Rewrites languages.json from the owner's public, non-fork, non-archived repos."""
+    listing = subprocess.run(
+        ["gh", "repo", "list", owner, "--visibility", "public", "--source", "--no-archived", "--limit", "1000", "--json", "languages"],
+        check=True, capture_output=True, text=True, encoding="utf-8",
+    ).stdout
+    shares = top_languages(json.loads(listing))
+    if not shares:
+        sys.exit("GitHub returned no language data; languages.json left as it was")
+    DATA.write_text(json.dumps(shares, indent=2) + "\n", encoding="utf-8", newline="\n")
+
+
+def load_languages():
+    # the names come from GitHub, so escape them before they go into markup
+    return [(html.escape(name), share) for name, share in json.loads(DATA.read_text(encoding="utf-8")).items()]
+
+
+def languages_label():
+    return "Most used languages across my public repos: " + ", ".join(f"{name} {share}%" for name, share in load_languages())
 
 FONT = {
     "F": ["#####", "#....", "#....", "####.", "#....", "#....", "#...."],
@@ -224,22 +268,20 @@ def languages(t):
     x0, y0, cells = 60, 70, 116
     bar = rect(x0, y0, cells * 10, 40, t["mute"])  # whatever the listed languages leave uncovered stays muted
     legend, x, widths = "", x0, []
-    for i, ((name, share), color) in enumerate(zip(LANGS, colors)):
-        widths.append(10 * max(1, round(cells * share / 100)))
+    for i, ((name, share), color) in enumerate(zip(load_languages(), colors)):
+        widths.append(min(10 * max(1, round(cells * share / 100)), x0 + cells * 10 - x))  # rounding must not overrun the bar
         bar += rect(x, y0, widths[i], 40, color)
         x += widths[i]
         lx, ly = x0 + 390 * (i % 3), 148 + 40 * (i // 3)
         legend += "".join(rect(lx + dx, ly + dy, 8, 8, color, rx=1.5) for dx in (0, 10) for dy in (0, 10))
         legend += f'<text x="{lx + 36}" y="{ly + 17}">{name} <tspan fill="{t["rule"]}">{share}%</tspan></text>'
-    assert x <= x0 + cells * 10, "shares add up to more than the bar"
     sparks = "".join(
         rect(x0 + 10 * rnd.randrange(widths[0] // 10) + 1, y0 - 8, 6, 6, t["ember"][n % 3], f"s s{n % 2}",
              f"animation-duration:{5.3 + n * 0.9:.1f}s;animation-delay:-{rnd.random() * 6:.1f}s", 1)
         for n in range(5)
     )
     css = SPARKS + f'text{{font:24px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:{t["ink"][0]}}}'
-    label = "Most used languages: " + ", ".join(f"{name} {share}%" for name, share in LANGS)
-    return tile(t, label, css, sparks + bar, legend, mesh=(x0, y0, cells * 10, 40), w=1280)
+    return tile(t, languages_label(), css, sparks + bar, legend, mesh=(x0, y0, cells * 10, 40), w=1280)
 
 
 ASSETS = {
@@ -248,6 +290,8 @@ ASSETS = {
 }
 
 if __name__ == "__main__":
+    if "--refresh" in sys.argv[1:]:
+        refresh_languages()
     OUT.mkdir(exist_ok=True)
     for name, draw in ASSETS.items():
         for theme, palette in THEMES.items():
@@ -257,3 +301,8 @@ if __name__ == "__main__":
             assert len(text) < 60_000, (name, len(text))
             (OUT / f"{name}-{theme}.svg").write_text(text, encoding="utf-8", newline="\n")
             print(f"{name}-{theme}.svg  {len(text) / 1024:.1f} KB")
+    # keep the README's alt text in step with the card
+    readme = ROOT / "README.md"
+    text, found = re.subn(r'alt="Most used languages[^"]*"', lambda _: f'alt="{languages_label()}"', readme.read_text(encoding="utf-8"))
+    assert found == 1, "languages alt text not found in README.md"
+    readme.write_text(text, encoding="utf-8", newline="\n")
