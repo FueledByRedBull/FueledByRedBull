@@ -69,12 +69,12 @@
 
 Also on here:
 
-- [thmmy-planner](https://github.com/FueledByRedBull/thmmy-planner): week planner for the ECE department at the University of Thessaly. [Open it](https://fueledbyredbull.github.io/thmmy-planner/).
-- [ASCII](https://github.com/FueledByRedBull/ASCII): deterministic C++20 renderer that turns video and images into ANSI/ASCII.
 - [maybe-wordle](https://github.com/FueledByRedBull/maybe-wordle): Wordle solver in Rust.
-- [rust-spreadsheet](https://github.com/FueledByRedBull/rust-spreadsheet): spreadsheet with a Rust computation engine behind a PyQt6 UI.
+- [thmmy-planner](https://github.com/FueledByRedBull/thmmy-planner): week planner for the ECE department at the University of Thessaly. [Open it](https://fueledbyredbull.github.io/thmmy-planner/).
 - [crossword](https://github.com/FueledByRedBull/crossword): themed crosswords generated from a Wikipedia article.
-- [CompVis](https://github.com/FueledByRedBull/CompVis): real-time facial expression analyzer.
+- [ASCII](https://github.com/FueledByRedBull/ASCII): deterministic C++20 renderer that turns video and images into ANSI/ASCII.
+- [lossy-and-found](https://github.com/FueledByRedBull/lossy-and-found): image optimizer that tries several codecs and keeps the smallest file that still passes a perceptual quality check.
+- [chudnovsky-pi](https://github.com/FueledByRedBull/chudnovsky-pi): multithreaded pi calculator in Rust that computes 100 million digits in about five seconds.
 
 ## Languages
 
