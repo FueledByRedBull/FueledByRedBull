@@ -19,7 +19,7 @@
       <br>
       Windows microphone processor. Noise suppression, EQ and dynamics for calls, streams and recordings, all processed locally.
       <br>
-      <sub><code>Rust</code> <code>Python</code> <code>PyQt6</code></sub>
+      <sub><code>Rust</code> <code>Python</code> <code>PySide6</code></sub>
     </td>
     <td width="50%" valign="top">
       <a href="https://github.com/FueledByRedBull/Powder-Game"><picture>
