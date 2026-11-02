@@ -82,6 +82,6 @@ Also on here:
   <a href="https://github.com/FueledByRedBull?tab=repositories"><picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/languages-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="assets/languages-light.svg">
-    <img src="assets/languages-light.svg" alt="Most used languages across my public repos: Rust 44.6%, Python 33.0%, C++ 10.5%, TypeScript 5.2%, GLSL 2.0%" width="100%">
+    <img src="assets/languages-light.svg" alt="Most used languages across my public repos: Python 38.5%, Rust 36.7%, C++ 11.7%, TypeScript 5.8%, GLSL 2.3%" width="100%">
   </picture></a>
 </p>
